@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team Stats Table</title>
+  <style>
+    body {
+      background-color: #111;
+      color: white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+    table {
+      border-collapse: collapse;
+      background-color: #222;
+      width: 600px;
+      text-align: left;
+      font-size: 14px;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #444;
+    }
+    th {
+      background-color: #ff9900;
+      color: black;
+      text-align: center;
+    }
+    td {
+      vertical-align: middle;
+    }
+    .logo {
+      width: 24px;
+      height: 24px;
+      vertical-align: middle;
+    }
+    .status-bar {
+      display: flex;
+      gap: 2px;
+    }
+    .status-bar div {
+      width: 6px;
+      height: 12px;
+    }
+    .alive { background-color: #00ff00; }
+    .dead { background-color: red; }
+    .outzone { background-color: #00ccff !important; }
+    .rank {
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Team Name</th>
+        <th>Fin.</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+  </table>
+
+  <script>
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSi8hg0w9o8dNFGzyNRNtuyS2L8JYeF5vNJerQzNGk0LPSXv1sUHkk5m6INRDVToXB5k7XlTphG3YuL/pub?gid=97251306&single=true&output=csv';
+
+    fetch(csvUrl)
+      .then(response => response.text())
+      .then(csvText => {
+        const rows = csvText.trim().split('\n').map(row => row.split(','));
+        const tbody = document.getElementById('table-body');
+
+        for (let i = 3; i <= 14 && i < rows.length; i++) {
+          const row = rows[i];
+          const logo = row[1];       // Column B
+          const teamName = row[2];   // Column C
+          const alive = parseInt(row[3]); // Column D
+          const kill = parseInt(row[4]);  // Column E
+          const outZone = row[5].trim().toUpperCase() === 'TRUE'; // Column F
+
+          const tr = document.createElement('tr');
+
+          const statusHtml = Array.from({ length: 4 }, (_, idx) => {
+            if (outZone) {
+              return `<div class="outzone"></div>`;
+            }
+            const baseClass = idx < alive ? 'alive' : 'dead';
+            return `<div class="${baseClass}"></div>`;
+          }).join('');
+
+          tr.innerHTML = `
+            <td class="rank">${i - 2}</td>
+            <td><img src="${logo}" class="logo" /> ${teamName}</td>
+            <td style="text-align:center">${kill}</td>
+            <td><div class="status-bar">${statusHtml}</div></td>
+          `;
+
+          tbody.appendChild(tr);
+        }
+      })
+      .catch(err => console.error("Error loading data:", err));
+  </script>
+
+</body>
+</html>
